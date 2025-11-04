@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/akilli_otopark}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:1234}
+    driver-class-name: org.postgresql.Driver
+
+  # ✅ YENİ EKLENEN JACKSON AYARLARI
+  jackson:
+    # Jackson'a, tarihleri TIMESTAMP (milisecond) olarak değil, okunabilir string olarak yazmasını söyler.
+    serialization:
+      write-dates-as-timestamps: false
+    # LocalDateTime'ı ISO-8601 (T harfli) formatta okumasını zorlar.
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # ✅ UTC Ayarı Korundu
+        hibernate.jdbc.time_zone: UTC
+
+server:
+  port: 8080
+
+app:
+  qr:
+    secret: ${APP_QR_SECRET}
+    ttl-minutes: ${APP_QR_TTL_MINUTES:30}
