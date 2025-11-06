@@ -1,14 +1,18 @@
 package com.akilliotopark.service;
 
-import com.akilliotopark.entity.Vehicle;
+import com.akilliotopark.dto.VehicleRequest;
+import com.akilliotopark.dto.VehicleResponse;
 import com.akilliotopark.entity.User;
-import com.akilliotopark.repository.VehicleRepository;
+import com.akilliotopark.entity.Vehicle;
+import com.akilliotopark.mapper.VehicleMapper;
 import com.akilliotopark.repository.UserRepository;
+import com.akilliotopark.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,29 +20,39 @@ public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
+    private final VehicleMapper vehicleMapper;
 
-    /** 🔹 Tüm araçları getirir */
-    public List<Vehicle> getAllVehicles() {
-        return vehicleRepository.findAll();
+    public List<VehicleResponse> getAllVehicles() {
+        return vehicleRepository.findAll().stream()
+                .map(vehicleMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
-    /** 🔹 ID ile araç bulur */
+    public VehicleResponse saveVehicle(VehicleRequest request) {
+        User owner = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("Araç sahibi kullanıcı bulunamadı: " + request.getOwnerId()));
+
+        Vehicle vehicle = vehicleMapper.toEntity(request);
+
+        vehicle.setOwner(owner);
+
+        Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        return vehicleMapper.toResponseDto(savedVehicle);
+    }
+
     public Optional<Vehicle> getVehicleById(Long id) {
         return vehicleRepository.findById(id);
     }
 
-    /** 🔹 Yeni araç oluşturur */
-    public Vehicle saveVehicle(Vehicle vehicle) {
-        return vehicleRepository.save(vehicle);
-    }
-
-    /** 🔹 Belirli bir kullanıcıya ait araçları getirir */
-    public List<Vehicle> getVehiclesByUserId(Long userId) {
+    public List<VehicleResponse> getVehiclesByUserId(Long userId) {
         Optional<User> userOpt = userRepository.findById(userId);
-        return userOpt.map(vehicleRepository::findByOwner).orElse(List.of());
+
+        return userOpt.map(user -> vehicleRepository.findByOwner(user).stream()
+                        .map(vehicleMapper::toResponseDto)
+                        .collect(Collectors.toList()))
+                .orElse(List.of());
     }
 
-    /** 🔹 Araç silme işlemi */
     public void deleteVehicle(Long id) {
         vehicleRepository.deleteById(id);
     }

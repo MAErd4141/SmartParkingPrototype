@@ -16,10 +16,10 @@ public class ParkingSpot {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String spotCode; // Örn: A1, B5, C2
+    private String spotCode;
 
     @Column(nullable = false)
-    private boolean occupied; // true = dolu, false = boş
+    private boolean occupied;
 
     public boolean isOccupied() {
         return occupied;

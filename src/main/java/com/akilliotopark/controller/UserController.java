@@ -1,29 +1,28 @@
+// src/main/java/com/akilliotopark/controller/UserController.java
 package com.akilliotopark.controller;
 
-import com.akilliotopark.entity.User;
-import com.akilliotopark.repository.UserRepository;
+import com.akilliotopark.dto.UserRequest;
+import com.akilliotopark.dto.UserResponse;
+import com.akilliotopark.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
-
-    // ✅ Elle yazılmış constructor
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserService userService;
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userRepository.save(user);
+    public UserResponse createUser(@RequestBody UserRequest userRequest) {
+        return userService.saveUser(userRequest);
     }
 }

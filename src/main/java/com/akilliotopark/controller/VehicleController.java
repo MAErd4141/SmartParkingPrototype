@@ -1,8 +1,8 @@
 package com.akilliotopark.controller;
 
-import com.akilliotopark.entity.Vehicle;
-import com.akilliotopark.repository.UserRepository;
-import com.akilliotopark.repository.VehicleRepository;
+import com.akilliotopark.dto.VehicleRequest;
+import com.akilliotopark.dto.VehicleResponse;
+import com.akilliotopark.service.VehicleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,21 +10,24 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vehicles")
-
+@RequiredArgsConstructor
 public class VehicleController {
 
-    private final VehicleRepository vehicleRepository;
+    private final VehicleService vehicleService;
 
-    public VehicleController(VehicleRepository vehicleRepository) {
-        this.vehicleRepository = vehicleRepository;
-    }
     @GetMapping
-    public List<Vehicle> getAllVehicles() {
-        return vehicleRepository.findAll();
+    public List<VehicleResponse> getAllVehicles() {
+        return vehicleService.getAllVehicles();
     }
 
     @PostMapping
-    public Vehicle addVehicle(@RequestBody Vehicle vehicle) {
-        return vehicleRepository.save(vehicle);
+    public VehicleResponse addVehicle(@RequestBody VehicleRequest vehicleRequest) {
+        return vehicleService.saveVehicle(vehicleRequest);
+    }
+
+
+    @GetMapping("/user/{userId}")
+    public List<VehicleResponse> getVehiclesByUserId(@PathVariable Long userId) {
+        return vehicleService.getVehiclesByUserId(userId);
     }
 }

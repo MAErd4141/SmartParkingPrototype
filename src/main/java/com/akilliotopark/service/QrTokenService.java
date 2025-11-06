@@ -25,10 +25,8 @@ public class QrTokenService {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /** QR Token oluşturur (JWT) — ChronoUnit kullanılmıyor */
     public String generateToken(Long reservationId, String plateNumber) {
         Instant now = Instant.now();
-        // ttlMinutes'i saniyeye çevir (overflow korumalı)
         long ttlSeconds = Math.multiplyExact(ttlMinutes, 60L);
         Instant exp = now.plusSeconds(ttlSeconds);
 
@@ -42,7 +40,6 @@ public class QrTokenService {
                 .compact();
     }
 
-    /** Token’ı ve plakayı doğrular */
     public boolean validateToken(String token, String plateNumber) {
         try {
             var claims = Jwts.parserBuilder()
@@ -60,7 +57,7 @@ public class QrTokenService {
                     && exp.after(new Date());
 
         } catch (JwtException e) {
-            return false; // geçersiz/expired token
+            return false;
         }
     }
 }

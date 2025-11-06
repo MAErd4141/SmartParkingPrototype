@@ -1,29 +1,39 @@
 package com.akilliotopark.controller;
 
-import com.akilliotopark.entity.Reservation;
+import com.akilliotopark.dto.ReservationRequest;
+import com.akilliotopark.dto.ReservationResponse;
+import com.akilliotopark.mapper.ReservationMapper;
 import com.akilliotopark.service.ReservationService;
+import com.akilliotopark.entity.Reservation;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservations")
+@RequiredArgsConstructor
 public class ReservationController {
 
     private final ReservationService reservationService;
-
-    public ReservationController(ReservationService reservationService) {
-        this.reservationService = reservationService;
-    }
+    private final ReservationMapper reservationMapper;
 
     @GetMapping
-    public List<Reservation> getAllReservations() {
-        return reservationService.getAllReservations();
+    public List<ReservationResponse> getAllReservations() {
+        List<Reservation> reservations = reservationService.getAllReservations();
+        return reservationMapper.toResponseDtoList(reservations);
+    }
+
+    @GetMapping("/{id}")
+    public ReservationResponse getReservationById(@PathVariable Long id) {
+        Reservation entity = reservationService.getReservationById(id);
+        return reservationMapper.toResponseDto(entity);
     }
 
     @PostMapping
-    public Reservation createReservation(@RequestBody Reservation reservation) {
-        return reservationService.createReservation(reservation);
+    public ReservationResponse createReservation(@RequestBody ReservationRequest reservationRequest) {
+        Reservation entity = reservationService.createReservation(reservationRequest);
+        return reservationMapper.toResponseDto(entity);
     }
 
     @PostMapping("/{id}/confirm")
@@ -42,7 +52,8 @@ public class ReservationController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<Reservation> getReservationsByUser(@PathVariable Long userId) {
-        return reservationService.getReservationsByUser(userId);
+    public List<ReservationResponse> getReservationsByUser(@PathVariable Long userId) {
+        List<Reservation> reservations = reservationService.getReservationsByUser(userId);
+        return reservationMapper.toResponseDtoList(reservations);
     }
 }

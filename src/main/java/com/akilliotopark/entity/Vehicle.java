@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "vehicles") // <--- BU SATIRI EKLE!
+@Table(name = "vehicles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,5 +20,5 @@ public class Vehicle {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User owner; // <-- Repository'de findByOwner(...) ile eşleşir
+    private User owner;
 }

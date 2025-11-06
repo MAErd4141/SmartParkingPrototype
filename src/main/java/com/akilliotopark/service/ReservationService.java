@@ -1,5 +1,6 @@
 package com.akilliotopark.service;
 
+import com.akilliotopark.dto.ReservationRequest;
 import com.akilliotopark.entity.Reservation;
 import com.akilliotopark.entity.User;
 import com.akilliotopark.entity.ParkingSpot;
@@ -8,9 +9,10 @@ import com.akilliotopark.repository.UserRepository;
 import com.akilliotopark.repository.ParkingSpotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit; // ✅ ChronoUnit import edildi!
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -22,78 +24,69 @@ public class ReservationService {
     private final ParkingSpotRepository parkingSpotRepository;
     private final QrTokenService qrTokenService;
 
-    /**
-     * 🔹 Tüm rezervasyonları döndürür
-     */
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
 
-    /**
-     * 🔹 Yeni rezervasyon oluşturur + QR token üretir
-     */
-    public Reservation createReservation(Reservation reservation) {
-        // 🔸 Zaman kontrolü - 1: Boş kontrolü
-        if (reservation.getReservedStart() == null || reservation.getReservedEnd() == null) {
+    @Transactional
+    public Reservation createReservation(ReservationRequest request) {
+
+        if (request.getReservedStart() == null || request.getReservedEnd() == null) {
             throw new IllegalArgumentException("Geçersiz zaman aralığı: Başlangıç ve Bitiş saatleri boş bırakılamaz.");
         }
 
-        // 🔸 Zaman kontrolü - 2: Bitiş, başlangıçtan önce olamaz
-        if (!reservation.getReservedEnd().isAfter(reservation.getReservedStart())) {
+        if (!request.getReservedEnd().isAfter(request.getReservedStart())) {
             throw new IllegalArgumentException("Geçersiz zaman aralığı: Bitiş saati, Başlangıç saatinden önce olamaz.");
         }
 
-        // 🔸 Zaman kontrolü - 3: Minimum süre kuralı (15 dakika) - ✅ EKLENDİ
+        // 🔸 Minimum süre kuralı (15 dakika)
         long durationMinutes = ChronoUnit.MINUTES.between(
-                reservation.getReservedStart(),
-                reservation.getReservedEnd()
+                request.getReservedStart(),
+                request.getReservedEnd()
         );
 
         if (durationMinutes < 15) {
             throw new IllegalArgumentException("Geçersiz zaman aralığı: Minimum rezervasyon süresi 15 dakikadır.");
         }
 
-        // 🔸 Kullanıcı ve park yeri doğrulama
-        Long userId = reservation.getUser().getId();
-        Long spotId = reservation.getParkingSpot().getId();
+        Long userId = request.getUserId();
+        Long spotId = request.getParkingSpotId();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + userId));
+
         ParkingSpot spot = parkingSpotRepository.findById(spotId)
                 .orElseThrow(() -> new RuntimeException("Park alanı bulunamadı: " + spotId));
 
-        // 🔸 Aynı zaman aralığında başka rezervasyon var mı?
         boolean hasOverlap = !reservationRepository
                 .findByParkingSpotIdAndReservedEndAfterAndReservedStartBefore(
                         spotId,
-                        reservation.getReservedStart(),
-                        reservation.getReservedEnd()
+                        request.getReservedStart(),
+                        request.getReservedEnd()
                 ).isEmpty();
 
         if (hasOverlap) {
             throw new RuntimeException("Bu zaman aralığında park alanı zaten rezerve edilmiş.");
         }
 
-        // 🔸 Bilgileri atayıp rezervasyonu aktif hale getir
-        reservation.setUser(user);
-        reservation.setParkingSpot(spot);
-        reservation.setActive(true);
-        reservation.setConfirmed(false);
+        Reservation reservation = Reservation.builder()
+                .user(user)
+                .parkingSpot(spot)
+                .reservedStart(request.getReservedStart())
+                .reservedEnd(request.getReservedEnd())
+                .active(request.isActive())
+                .confirmed(request.isConfirmed())
+                .build();
 
-        // 🔸 Kaydı ilk defa DB'ye yaz
         Reservation saved = reservationRepository.save(reservation);
 
-        // ✅ QR token üret
         String qrToken = qrTokenService.generateToken(saved.getId(), user.getEmail());
         saved.setQrCode(qrToken);
 
-        // 🔸 QR eklendikten sonra tekrar kaydet
         return reservationRepository.save(saved);
     }
 
-    /**
-     * 🔹 Rezervasyonu onaylar (admin veya sistem tarafından)
-     */
+
     public void confirmReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
@@ -101,9 +94,7 @@ public class ReservationService {
         reservationRepository.save(r);
     }
 
-    /**
-     * 🔹 Rezervasyonu tamamlanmış olarak işaretler
-     */
+
     public void completeReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
@@ -111,9 +102,6 @@ public class ReservationService {
         reservationRepository.save(r);
     }
 
-    /**
-     * 🔹 Rezervasyonu iptal eder
-     */
     public void cancelReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
@@ -121,21 +109,21 @@ public class ReservationService {
         reservationRepository.save(r);
     }
 
-    /**
-     * 🔹 Belirli bir kullanıcının tüm rezervasyonlarını döndürür
-     */
+
     public List<Reservation> getReservationsByUser(Long userId) {
         return reservationRepository.findByUserId(userId);
     }
 
-    /**
-     * 🔹 Şu anda aktif rezervasyonları listeler (opsiyonel)
-     */
+
     public List<Reservation> getActiveReservationsAt(LocalDateTime now) {
         return reservationRepository.findAll().stream()
                 .filter(r -> r.isActive()
                         && (r.getReservedStart().isBefore(now) || r.getReservedStart().isEqual(now))
                         && (r.getReservedEnd().isAfter(now) || r.getReservedEnd().isEqual(now)))
                 .toList();
+    }
+    public Reservation getReservationById(Long id) {
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
     }
 }

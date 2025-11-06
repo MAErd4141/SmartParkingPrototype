@@ -1,7 +1,10 @@
 package com.akilliotopark.service;
 
+import com.akilliotopark.dto.ParkingSpotRequest;
 import com.akilliotopark.entity.ParkingSpot;
+import com.akilliotopark.mapper.ParkingSpotMapper;
 import com.akilliotopark.repository.ParkingSpotRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,33 +13,31 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ParkingSpotService {
 
     private final ParkingSpotRepository parkingSpotRepository;
+    private final ParkingSpotMapper parkingSpotMapper;
 
-    // ✅ Elle yazılmış constructor
-    public ParkingSpotService(ParkingSpotRepository parkingSpotRepository) {
-        this.parkingSpotRepository = parkingSpotRepository;
-    }
 
     /** Tüm park yerleri */
     public List<ParkingSpot> getAllSpots() {
         return parkingSpotRepository.findAll();
     }
 
-    /** Controller’ın beklediği isim: saveSpot */
-    public ParkingSpot saveSpot(ParkingSpot spot) {
+    @Transactional
+    public ParkingSpot saveSpot(ParkingSpotRequest request) {
+        ParkingSpot spot = parkingSpotMapper.toEntity(request);
+
         validateSpot(spot);
         return parkingSpotRepository.save(spot);
     }
 
-    /** Mevcut kodlarda kullanıldıysa bozulmasın diye: createSpot -> saveSpot delegasyonu */
     @Deprecated
     public ParkingSpot createSpot(ParkingSpot spot) {
-        return saveSpot(spot);
+        return parkingSpotRepository.save(spot);
     }
 
-    /** Kod ile durum güncelleme */
     @Transactional
     public ParkingSpot updateSpotStatus(String code, boolean occupied) {
         ParkingSpot spot = parkingSpotRepository.findBySpotCode(code);
@@ -44,19 +45,16 @@ public class ParkingSpotService {
             throw new RuntimeException("Park yeri bulunamadı: " + code);
         }
         spot.setOccupied(occupied);
-        // @Transactional olduğundan explicit save şart değil ama tutarlılık için bırakalım:
         return parkingSpotRepository.save(spot);
     }
 
-    /** Müsait park yerleri */
     public List<ParkingSpot> getAvailableSpots() {
         return parkingSpotRepository.findAll()
                 .stream()
                 .filter(s -> !Boolean.TRUE.equals(s.isOccupied()))
-                .collect(Collectors.toList()); // JDK8-11 uyumlu
+                .collect(Collectors.toList());
     }
 
-    /** İsteğe bağlı yardımcı: koda göre tek park yeri getir */
     public ParkingSpot getByCode(String code) {
         ParkingSpot spot = parkingSpotRepository.findBySpotCode(code);
         if (spot == null) {
@@ -72,7 +70,6 @@ public class ParkingSpotService {
         if (spot.getSpotCode() == null || spot.getSpotCode().isBlank()) {
             throw new IllegalArgumentException("spotCode boş olamaz.");
         }
-        // Aynı koddan var mı? (Repository'nizde unique constraint varsa bu opsiyonel)
         ParkingSpot existing = parkingSpotRepository.findBySpotCode(spot.getSpotCode());
         if (existing != null && !Objects.equals(existing.getId(), spot.getId())) {
             throw new IllegalStateException("Bu spotCode zaten kullanımda: " + spot.getSpotCode());
