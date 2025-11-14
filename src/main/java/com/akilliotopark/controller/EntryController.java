@@ -2,6 +2,7 @@ package com.akilliotopark.controller;
 
 import com.akilliotopark.service.QrTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -15,7 +16,7 @@ public class EntryController {
     private final QrTokenService qrTokenService;
 
     @PostMapping("/verify")
-    public Map<String, Object> verifyEntry(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> verifyEntry(@RequestBody Map<String, String> body) {
         String token = body.get("qr");
         String plate = body.get("plate");
 
@@ -25,6 +26,6 @@ public class EntryController {
         response.put("authorized", valid);
         response.put("message", valid ? "Giriş onaylandı ✅" : "Geçersiz veya süresi dolmuş QR ⛔");
 
-        return response;
+        return ResponseEntity.ok(response);
     }
 }

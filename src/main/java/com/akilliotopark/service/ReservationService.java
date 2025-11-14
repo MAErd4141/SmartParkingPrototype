@@ -1,12 +1,15 @@
 package com.akilliotopark.service;
 
 import com.akilliotopark.dto.ReservationRequest;
+import com.akilliotopark.entity.ParkingSpot;
 import com.akilliotopark.entity.Reservation;
 import com.akilliotopark.entity.User;
-import com.akilliotopark.entity.ParkingSpot;
+import com.akilliotopark.exception.BusinessValidationException;
+import com.akilliotopark.exception.ConflictException;
+import com.akilliotopark.exception.NotFoundException;
+import com.akilliotopark.repository.ParkingSpotRepository;
 import com.akilliotopark.repository.ReservationRepository;
 import com.akilliotopark.repository.UserRepository;
-import com.akilliotopark.repository.ParkingSpotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,31 +35,28 @@ public class ReservationService {
     public Reservation createReservation(ReservationRequest request) {
 
         if (request.getReservedStart() == null || request.getReservedEnd() == null) {
-            throw new IllegalArgumentException("Geçersiz zaman aralığı: Başlangıç ve Bitiş saatleri boş bırakılamaz.");
+            throw new BusinessValidationException("Geçersiz zaman aralığı: Başlangıç ve bitiş saatleri boş bırakılamaz.");
         }
 
         if (!request.getReservedEnd().isAfter(request.getReservedStart())) {
-            throw new IllegalArgumentException("Geçersiz zaman aralığı: Bitiş saati, Başlangıç saatinden önce olamaz.");
+            throw new BusinessValidationException("Geçersiz zaman aralığı: Bitiş saati, başlangıç saatinden sonra olmalıdır.");
         }
-
-        // 🔸 Minimum süre kuralı (15 dakika)
         long durationMinutes = ChronoUnit.MINUTES.between(
                 request.getReservedStart(),
                 request.getReservedEnd()
         );
-
         if (durationMinutes < 15) {
-            throw new IllegalArgumentException("Geçersiz zaman aralığı: Minimum rezervasyon süresi 15 dakikadır.");
+            throw new BusinessValidationException("Geçersiz zaman aralığı: Minimum rezervasyon süresi 15 dakikadır.");
         }
 
         Long userId = request.getUserId();
         Long spotId = request.getParkingSpotId();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + userId));
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + userId));
 
         ParkingSpot spot = parkingSpotRepository.findById(spotId)
-                .orElseThrow(() -> new RuntimeException("Park alanı bulunamadı: " + spotId));
+                .orElseThrow(() -> new NotFoundException("Park alanı bulunamadı: " + spotId));
 
         boolean hasOverlap = !reservationRepository
                 .findByParkingSpotIdAndReservedEndAfterAndReservedStartBefore(
@@ -66,7 +66,7 @@ public class ReservationService {
                 ).isEmpty();
 
         if (hasOverlap) {
-            throw new RuntimeException("Bu zaman aralığında park alanı zaten rezerve edilmiş.");
+            throw new ConflictException("Bu zaman aralığında park alanı zaten rezerve edilmiş.");
         }
 
         Reservation reservation = Reservation.builder()
@@ -86,34 +86,33 @@ public class ReservationService {
         return reservationRepository.save(saved);
     }
 
-
+    @Transactional
     public void confirmReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
+                .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setConfirmed(true);
         reservationRepository.save(r);
     }
 
-
+    @Transactional
     public void completeReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
+                .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setActive(false);
         reservationRepository.save(r);
     }
 
+    @Transactional
     public void cancelReservation(Long id) {
         Reservation r = reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
+                .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setActive(false);
         reservationRepository.save(r);
     }
-
 
     public List<Reservation> getReservationsByUser(Long userId) {
         return reservationRepository.findByUserId(userId);
     }
-
 
     public List<Reservation> getActiveReservationsAt(LocalDateTime now) {
         return reservationRepository.findAll().stream()
@@ -122,8 +121,9 @@ public class ReservationService {
                         && (r.getReservedEnd().isAfter(now) || r.getReservedEnd().isEqual(now)))
                 .toList();
     }
+
     public Reservation getReservationById(Long id) {
         return reservationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rezervasyon bulunamadı: " + id));
+                .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
     }
 }

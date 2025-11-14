@@ -11,5 +11,5 @@ public class ParkingSpotRequest {
     private String spotCode;
 
     @NotNull(message = "Doluluk durumu belirtilmelidir.")
-    private boolean occupied;
+    private Boolean occupied;
 }

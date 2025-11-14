@@ -6,7 +6,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
@@ -16,7 +15,7 @@ import java.util.Date;
 public class QrTokenService {
 
     @Value("${app.qr.secret}")
-    private String secret; // En az 32 byte olmalı
+    private String secret;
 
     @Value("${app.qr.ttl-minutes:30}")
     private long ttlMinutes;
