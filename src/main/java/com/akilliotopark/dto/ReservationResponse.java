@@ -1,26 +1,22 @@
 package com.akilliotopark.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Data
 public class ReservationResponse {
 
-    private Long id;
+    private String id;
+    private String userId;
+    private String parkingSpotId;
 
-    // İlişkisel ID'ler
-    private Long userId;
-    private Long parkingSpotId;
+    private String parkingLotId;
+    private String parkingLotName;
+    private String parkingSpotCode;
 
-    // Zaman ve QR Kodu
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime reservedStart;
+    private String reservedStart;
+    private String reservedEnd;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime reservedEnd;
-
-    private String qrCode;
     private boolean active;
     private boolean confirmed;
+    private String qrCode;
 }

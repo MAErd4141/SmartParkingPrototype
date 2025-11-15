@@ -5,16 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-
-    // Aynı park yerinde çakışan rezervasyon var mı?
+public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
     List<Reservation> findByParkingSpotIdAndReservedEndAfterAndReservedStartBefore(
-            Long parkingSpotId,
+            UUID parkingSpotId,
             LocalDateTime start,
             LocalDateTime end
     );
-
-    // Kullanıcıya göre liste
-    List<Reservation> findByUserId(Long userId);
+    List<Reservation> findByUserId(UUID userId);
 }

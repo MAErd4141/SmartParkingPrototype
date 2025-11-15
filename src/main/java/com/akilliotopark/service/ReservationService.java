@@ -14,9 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -41,16 +42,19 @@ public class ReservationService {
         if (!request.getReservedEnd().isAfter(request.getReservedStart())) {
             throw new BusinessValidationException("Geçersiz zaman aralığı: Bitiş saati, başlangıç saatinden sonra olmalıdır.");
         }
-        long durationMinutes = ChronoUnit.MINUTES.between(
+
+        // ChronoUnit yerine Duration kullanıyoruz
+        long durationMinutes = Duration.between(
                 request.getReservedStart(),
                 request.getReservedEnd()
-        );
+        ).toMinutes();
+
         if (durationMinutes < 15) {
             throw new BusinessValidationException("Geçersiz zaman aralığı: Minimum rezervasyon süresi 15 dakikadır.");
         }
 
-        Long userId = request.getUserId();
-        Long spotId = request.getParkingSpotId();
+        UUID userId = request.getUserId();
+        UUID spotId = request.getParkingSpotId();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + userId));
@@ -79,15 +83,13 @@ public class ReservationService {
                 .build();
 
         Reservation saved = reservationRepository.save(reservation);
-
         String qrToken = qrTokenService.generateToken(saved.getId(), user.getEmail());
         saved.setQrCode(qrToken);
 
         return reservationRepository.save(saved);
     }
-
     @Transactional
-    public void confirmReservation(Long id) {
+    public void confirmReservation(UUID id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setConfirmed(true);
@@ -95,7 +97,7 @@ public class ReservationService {
     }
 
     @Transactional
-    public void completeReservation(Long id) {
+    public void completeReservation(UUID id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setActive(false);
@@ -103,14 +105,14 @@ public class ReservationService {
     }
 
     @Transactional
-    public void cancelReservation(Long id) {
+    public void cancelReservation(UUID id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
         r.setActive(false);
         reservationRepository.save(r);
     }
 
-    public List<Reservation> getReservationsByUser(Long userId) {
+    public List<Reservation> getReservationsByUser(UUID userId) {
         return reservationRepository.findByUserId(userId);
     }
 
@@ -122,8 +124,13 @@ public class ReservationService {
                 .toList();
     }
 
-    public Reservation getReservationById(Long id) {
+    public Reservation getReservationById(UUID id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
+    }
+    public List<Reservation> getReservationsByUserEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + email));
+        return reservationRepository.findByUserId(user.getId());
     }
 }

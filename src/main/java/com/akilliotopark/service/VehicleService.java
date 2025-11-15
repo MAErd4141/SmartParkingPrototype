@@ -11,9 +11,10 @@ import com.akilliotopark.repository.UserRepository;
 import com.akilliotopark.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,64 +25,93 @@ public class VehicleService {
     private final VehicleMapper vehicleMapper;
 
     public List<VehicleResponse> getAllVehicles() {
-        return vehicleRepository.findAll()
-                .stream()
-                .map(vehicleMapper::toResponseDto)
-                .collect(Collectors.toList());
+        List<Vehicle> vehicles = vehicleRepository.findAll();
+        return vehicleMapper.toResponseDtoList(vehicles);
     }
 
-    public VehicleResponse getVehicleById(Long id) {
+    public VehicleResponse getVehicleById(UUID id) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Araç bulunamadı: " + id));
         return vehicleMapper.toResponseDto(vehicle);
     }
-
-    public VehicleResponse saveVehicle(VehicleRequest vehicleRequest) {
-        Vehicle existingByPlate = vehicleRepository.findByPlateNumber(vehicleRequest.getPlateNumber());
-        if (existingByPlate != null) {
-            throw new ConflictException("Bu plaka numarası zaten kayıtlı: " + vehicleRequest.getPlateNumber());
+    @Transactional
+    public VehicleResponse createVehicle(String ownerEmail, VehicleRequest request) {
+        // Plaka benzersiz olsun
+        Vehicle exists = vehicleRepository.findByPlateNumber(request.getPlateNumber());
+        if (exists != null) {
+            throw new ConflictException("Bu plaka zaten kayıtlı: " + request.getPlateNumber());
         }
-        User owner = userRepository.findById(vehicleRequest.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("Araç sahibi kullanıcı bulunamadı: " + vehicleRequest.getOwnerId()));
 
-        Vehicle vehicle = vehicleMapper.toEntity(vehicleRequest);
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + ownerEmail));
+
+        Vehicle vehicle = vehicleMapper.toEntity(request);
         vehicle.setOwner(owner);
 
         Vehicle saved = vehicleRepository.save(vehicle);
         return vehicleMapper.toResponseDto(saved);
     }
-
-    public VehicleResponse updateVehicle(Long id, VehicleRequest vehicleRequest) {
-        Vehicle existing = vehicleRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Araç bulunamadı: " + id));
-        Vehicle byPlate = vehicleRepository.findByPlateNumber(vehicleRequest.getPlateNumber());
-        if (byPlate != null && !byPlate.getId().equals(id)) {
-            throw new ConflictException("Bu plaka numarası başka bir araca ait: " + vehicleRequest.getPlateNumber());
+    @Transactional
+    public VehicleResponse createVehicle(VehicleRequest request) {
+        Vehicle exists = vehicleRepository.findByPlateNumber(request.getPlateNumber());
+        if (exists != null) {
+            throw new ConflictException("Bu plaka zaten kayıtlı: " + request.getPlateNumber());
         }
 
-        User owner = userRepository.findById(vehicleRequest.getOwnerId())
-                .orElseThrow(() -> new NotFoundException("Araç sahibi kullanıcı bulunamadı: " + vehicleRequest.getOwnerId()));
+        User owner = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + request.getOwnerId()));
 
-        existing.setPlateNumber(vehicleRequest.getPlateNumber());
+        Vehicle vehicle = vehicleMapper.toEntity(request);
+        vehicle.setOwner(owner);
+
+        Vehicle saved = vehicleRepository.save(vehicle);
+        return vehicleMapper.toResponseDto(saved);
+    }
+    @Transactional
+    public VehicleResponse updateVehicle(UUID id, VehicleRequest request) {
+        Vehicle existing = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Araç bulunamadı: " + id));
+        if (!existing.getPlateNumber().equals(request.getPlateNumber())) {
+            Vehicle exists = vehicleRepository.findByPlateNumber(request.getPlateNumber());
+            if (exists != null && !exists.getId().equals(id)) {
+                throw new ConflictException("Bu plaka zaten kullanımda: " + request.getPlateNumber());
+            }
+        }
+
+        existing.setPlateNumber(request.getPlateNumber());
+
+        User owner = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + request.getOwnerId()));
         existing.setOwner(owner);
 
         Vehicle saved = vehicleRepository.save(existing);
         return vehicleMapper.toResponseDto(saved);
     }
-
-    public List<VehicleResponse> getVehiclesByUserId(Long userId) {
-        User user = userRepository.findById(userId)
+    @Transactional
+    public void deleteVehicle(UUID id) {
+        Vehicle existing = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Araç bulunamadı: " + id));
+        vehicleRepository.delete(existing);
+    }
+    public List<VehicleResponse> getVehiclesByUser(UUID userId) {
+        User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + userId));
 
-        return vehicleRepository.findByOwner(user).stream()
-                .map(vehicleMapper::toResponseDto)
-                .collect(Collectors.toList());
+        List<Vehicle> vehicles = vehicleRepository.findByOwner(owner);
+        return vehicleMapper.toResponseDtoList(vehicles);
     }
+    public List<VehicleResponse> getVehiclesByEmail(String email) {
+        User owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + email));
 
-    public void deleteVehicle(Long id) {
-        if (!vehicleRepository.existsById(id)) {
-            throw new NotFoundException("Araç bulunamadı: " + id);
+        List<Vehicle> vehicles = vehicleRepository.findByOwner(owner);
+        return vehicleMapper.toResponseDtoList(vehicles);
+    }
+    public VehicleResponse getVehicleByPlate(String plate) {
+        Vehicle vehicle = vehicleRepository.findByPlateNumber(plate);
+        if (vehicle == null) {
+            throw new NotFoundException("Bu plakaya ait araç bulunamadı: " + plate);
         }
-        vehicleRepository.deleteById(id);
+        return vehicleMapper.toResponseDto(vehicle);
     }
 }

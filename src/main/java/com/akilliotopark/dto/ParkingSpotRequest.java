@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class ParkingSpotRequest {
 
@@ -12,4 +14,7 @@ public class ParkingSpotRequest {
 
     @NotNull(message = "Doluluk durumu belirtilmelidir.")
     private Boolean occupied;
+
+    @NotNull(message = "Otopark (lot) ID'si zorunludur.")
+    private UUID parkingLotId;
 }

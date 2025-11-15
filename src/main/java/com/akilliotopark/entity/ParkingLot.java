@@ -1,18 +1,20 @@
 package com.akilliotopark.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "parking_lots")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class ParkingLot {
 
     @Id
     @GeneratedValue
@@ -20,20 +22,20 @@ public class User {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private String code;
 
     @Column(nullable = false)
-    private String fullName;
+    private String name;
 
-    private String avatarImageName;
+    private Double latitude;
+    private Double longitude;
 
-    @Column(nullable = false)
-    private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
+    private String address;
 
     private String district;
     private String province;
+
+    @OneToMany(mappedBy = "parkingLot", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ParkingSpot> spots;
 }

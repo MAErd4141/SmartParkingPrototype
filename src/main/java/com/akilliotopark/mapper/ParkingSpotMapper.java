@@ -2,11 +2,13 @@ package com.akilliotopark.mapper;
 
 import com.akilliotopark.dto.ParkingSpotRequest;
 import com.akilliotopark.entity.ParkingSpot;
-import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring")
 public interface ParkingSpotMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parkingLot", ignore = true)
+    @Mapping(target = "occupied", expression = "java(request.getOccupied() != null && request.getOccupied())")
     ParkingSpot toEntity(ParkingSpotRequest request);
-    ParkingSpotRequest toRequestDto(ParkingSpot entity);
 }

@@ -1,23 +1,29 @@
 package com.akilliotopark.mapper;
 
-import com.akilliotopark.dto.ReservationRequest;
 import com.akilliotopark.dto.ReservationResponse;
 import com.akilliotopark.entity.Reservation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
-import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+import java.util.List;
+import java.util.UUID;
+
+@Mapper(componentModel = "spring")
 public interface ReservationMapper {
 
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "parkingSpot", ignore = true)
-    Reservation toEntity(ReservationRequest request);
+    @Mapping(target = "id", expression = "java(reservation.getId().toString())")
+    @Mapping(target = "userId", expression = "java(reservation.getUser().getId().toString())")
+    @Mapping(target = "parkingSpotId", expression = "java(reservation.getParkingSpot().getId().toString())")
+    @Mapping(target = "parkingLotId", expression = "java(reservation.getParkingSpot().getParkingLot().getId().toString())")
+    @Mapping(target = "parkingLotName", expression = "java(reservation.getParkingSpot().getParkingLot().getName())")
+    @Mapping(target = "parkingSpotCode", expression = "java(reservation.getParkingSpot().getSpotCode())")
+    @Mapping(target = "reservedStart", expression = "java(reservation.getReservedStart().toString())")
+    @Mapping(target = "reservedEnd", expression = "java(reservation.getReservedEnd().toString())")
+    ReservationResponse toResponseDto(Reservation reservation);
 
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "parkingSpot.id", target = "parkingSpotId")
-    ReservationResponse toResponseDto(Reservation entity);
+    List<ReservationResponse> toResponseDtoList(List<Reservation> reservations);
 
-    List<ReservationResponse> toResponseDtoList(List<Reservation> entityList);
+    default String map(UUID id) {
+        return id != null ? id.toString() : null;
+    }
 }

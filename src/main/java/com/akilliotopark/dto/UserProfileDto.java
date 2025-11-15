@@ -1,15 +1,15 @@
+// UserProfileDto.java
 package com.akilliotopark.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class UserResponse {
+@Builder
+public class UserProfileDto {
 
-    private String id;
-    private String email;
+    private String userID;
     private String fullName;
     private String avatarImageName;
     private String role;
-    private String district;
-    private String province;
 }

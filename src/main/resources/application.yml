@@ -5,29 +5,29 @@ spring:
     password: ${DB_PASS:1234}
     driver-class-name: org.postgresql.Driver
 
-  # ✅ YENİ EKLENEN JACKSON AYARLARI
-  jackson:
-    # Jackson'a, tarihleri TIMESTAMP (milisecond) olarak değil, okunabilir string olarak yazmasını söyler.
-    serialization:
-      write-dates-as-timestamps: false
-    # LocalDateTime'ı ISO-8601 (T harfli) formatta okumasını zorlar.
-    date-format: yyyy-MM-dd'T'HH:mm:ss
-
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create   # 🟢 ŞİMDİLİK create (schema sıfırladık ya)
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        # ✅ UTC Ayarı Korundu
-        hibernate.jdbc.time_zone: UTC
+        jdbc.time_zone: UTC
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
 
 server:
   port: 8080
 
 app:
   qr:
-    secret: ${APP_QR_SECRET}
+    secret: ${APP_QR_SECRET:super-secret-key-buraya-bir-sey-yaz}
     ttl-minutes: ${APP_QR_TTL_MINUTES:30}
+
+  jwt:
+    secret: ${APP_JWT_SECRET:super-gizli-jwt-key-buraya-bir-sey-yaz}
+    expiration-minutes: 60

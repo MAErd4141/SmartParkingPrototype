@@ -3,29 +3,29 @@ package com.akilliotopark.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "parking_spots")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ParkingSpot {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String spotCode;
 
     @Column(nullable = false)
     private boolean occupied;
 
-    public boolean isOccupied() {
-        return occupied;
-    }
-    public void setOccupied(boolean occupied) {
-        this.occupied = occupied;
-    }
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parking_lot_id", columnDefinition = "uuid")
+    private ParkingLot parkingLot;
 }
