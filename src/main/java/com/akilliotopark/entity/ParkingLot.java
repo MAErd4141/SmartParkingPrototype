@@ -14,10 +14,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ParkingLot {
+public class ParkingLot extends BaseEntity {
 
     @Id
-    @GeneratedValue
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
@@ -27,11 +26,13 @@ public class ParkingLot {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
+    private Double hourlyRate;
+
     private Double latitude;
     private Double longitude;
 
     private String address;
-
     private String district;
     private String province;
 

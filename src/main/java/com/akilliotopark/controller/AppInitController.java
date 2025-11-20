@@ -6,9 +6,10 @@ import com.akilliotopark.entity.User;
 import com.akilliotopark.exception.NotFoundException;
 import com.akilliotopark.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/app")
@@ -17,17 +18,18 @@ public class AppInitController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/init/{userId}")
-    public AppInitResponse init(@PathVariable UUID userId) {
+    @GetMapping("/init")
+    public AppInitResponse init(Authentication auth) {
+        String email = auth.getName();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + userId));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + email));
 
         UserProfileDto profile = UserProfileDto.builder()
                 .userID(user.getId().toString())
                 .fullName(user.getFullName())
                 .avatarImageName(user.getAvatarImageName())
-                .role(user.getRole().name().toLowerCase()) // "basic"
+                .role(user.getRole().name().toLowerCase())
                 .build();
 
         return AppInitResponse.builder()

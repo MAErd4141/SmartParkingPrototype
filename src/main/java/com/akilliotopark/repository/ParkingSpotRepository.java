@@ -1,5 +1,6 @@
 package com.akilliotopark.repository;
 
+import com.akilliotopark.entity.ParkingLot;
 import com.akilliotopark.entity.ParkingSpot;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,6 +10,12 @@ import java.util.UUID;
 public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID> {
 
     ParkingSpot findBySpotCode(String spotCode);
+
+    List<ParkingSpot> findByParkingLot(ParkingLot parkingLot);
+
+    long countByParkingLot(ParkingLot parkingLot);
+
+    long countByParkingLotAndOccupiedTrue(ParkingLot parkingLot);
 
     List<ParkingSpot> findByParkingLotId(UUID parkingLotId);
 }

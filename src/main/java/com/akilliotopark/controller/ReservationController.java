@@ -51,7 +51,8 @@ public class ReservationController {
             Authentication auth,
             @Valid @RequestBody ReservationRequest request
     ) {
-        Reservation created = reservationService.createReservation(request);
+        Reservation created = reservationService.createReservation(auth.getName(), request);
+
         return ResponseEntity.ok(reservationMapper.toResponseDto(created));
     }
     @PreAuthorize("hasRole('ADMIN')")
@@ -60,7 +61,7 @@ public class ReservationController {
         reservationService.confirmReservation(id);
         return ResponseEntity.ok().build();
     }
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/{id}/complete")
     public ResponseEntity<Void> complete(@PathVariable UUID id) {
         reservationService.completeReservation(id);

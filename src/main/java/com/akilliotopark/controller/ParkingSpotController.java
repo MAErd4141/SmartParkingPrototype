@@ -1,7 +1,9 @@
 package com.akilliotopark.controller;
 
 import com.akilliotopark.dto.ParkingSpotRequest;
+import com.akilliotopark.dto.ParkingSpotResponse; // DTO import edildi
 import com.akilliotopark.entity.ParkingSpot;
+import com.akilliotopark.mapper.ParkingSpotMapper; // Mapper import edildi
 import com.akilliotopark.service.ParkingSpotService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,40 +19,42 @@ import java.util.UUID;
 public class ParkingSpotController {
 
     private final ParkingSpotService parkingSpotService;
+    private final ParkingSpotMapper parkingSpotMapper;
 
     @GetMapping
-    public ResponseEntity<List<ParkingSpot>> getAllSpots() {
-        return ResponseEntity.ok(parkingSpotService.getAllSpots());
+    public ResponseEntity<List<ParkingSpotResponse>> getAllSpots() {
+        List<ParkingSpot> spots = parkingSpotService.getAllSpots();
+        return ResponseEntity.ok(parkingSpotMapper.toResponseDtoList(spots));
     }
 
     @GetMapping("/lot/{lotId}")
-    public ResponseEntity<List<ParkingSpot>> getSpotsByLot(@PathVariable UUID lotId) {
-        return ResponseEntity.ok(parkingSpotService.getSpotsByLot(lotId));
+    public ResponseEntity<List<ParkingSpotResponse>> getSpotsByLot(@PathVariable UUID lotId) {
+        List<ParkingSpot> spots = parkingSpotService.getSpotsByLot(lotId);
+        return ResponseEntity.ok(parkingSpotMapper.toResponseDtoList(spots));
     }
 
     @PostMapping
-    public ResponseEntity<ParkingSpot> createSpot(
+    public ResponseEntity<ParkingSpotResponse> createSpot(
             @Valid @RequestBody ParkingSpotRequest request) {
 
         ParkingSpot saved = parkingSpotService.saveSpot(request);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(parkingSpotMapper.toResponseDto(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ParkingSpot> updateSpot(
+    public ResponseEntity<ParkingSpotResponse> updateSpot(
             @PathVariable UUID id,
             @Valid @RequestBody ParkingSpotRequest request) {
 
         ParkingSpot updated = parkingSpotService.updateSpot(id, request);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(parkingSpotMapper.toResponseDto(updated));
     }
-
     @PostMapping("/{spotCode}/status")
-    public ResponseEntity<ParkingSpot> updateSpotStatus(
+    public ResponseEntity<ParkingSpotResponse> updateSpotStatus(
             @PathVariable String spotCode,
             @RequestParam boolean occupied) {
 
         ParkingSpot updated = parkingSpotService.updateSpotStatus(spotCode, occupied);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(parkingSpotMapper.toResponseDto(updated));
     }
 }

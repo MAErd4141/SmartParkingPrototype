@@ -10,11 +10,11 @@ import java.util.UUID;
 @Data
 public class ReservationRequest {
 
-    @NotNull(message = "Kullanıcı ID'si zorunludur.")
-    private UUID userId;
-
     @NotNull(message = "Park yeri ID'si zorunludur.")
     private UUID parkingSpotId;
+
+    @NotNull(message = "Araç seçimi zorunludur.")
+    private UUID vehicleId;
 
     @NotNull(message = "Başlangıç saati zorunludur.")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -23,7 +23,4 @@ public class ReservationRequest {
     @NotNull(message = "Bitiş saati zorunludur.")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime reservedEnd;
-
-    private boolean active = true;
-    private boolean confirmed = false;
 }

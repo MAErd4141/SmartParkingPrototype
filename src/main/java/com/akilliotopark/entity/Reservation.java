@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Reservation {
+public class Reservation extends BaseEntity {
 
     @Id
     @GeneratedValue
@@ -21,18 +21,25 @@ public class Reservation {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", columnDefinition = "uuid", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parking_spot_id", columnDefinition = "uuid", nullable = false)
+    @JoinColumn(name = "parking_spot_id", nullable = false)
     private ParkingSpot parkingSpot;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
 
     @Column(nullable = false)
     private LocalDateTime reservedStart;
 
     @Column(nullable = false)
     private LocalDateTime reservedEnd;
+
+    @Column(nullable = false)
+    private Double totalPrice;
 
     @Column(nullable = false)
     private boolean active;

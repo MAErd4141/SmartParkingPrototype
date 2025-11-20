@@ -6,24 +6,19 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
-import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface ReservationMapper {
 
-    @Mapping(target = "id", expression = "java(reservation.getId().toString())")
-    @Mapping(target = "userId", expression = "java(reservation.getUser().getId().toString())")
-    @Mapping(target = "parkingSpotId", expression = "java(reservation.getParkingSpot().getId().toString())")
-    @Mapping(target = "parkingLotId", expression = "java(reservation.getParkingSpot().getParkingLot().getId().toString())")
-    @Mapping(target = "parkingLotName", expression = "java(reservation.getParkingSpot().getParkingLot().getName())")
-    @Mapping(target = "parkingSpotCode", expression = "java(reservation.getParkingSpot().getSpotCode())")
-    @Mapping(target = "reservedStart", expression = "java(reservation.getReservedStart().toString())")
-    @Mapping(target = "reservedEnd", expression = "java(reservation.getReservedEnd().toString())")
+    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "parkingSpot.id", target = "parkingSpotId")
+    @Mapping(source = "parkingSpot.parkingLot.id", target = "parkingLotId")
+    @Mapping(source = "parkingSpot.parkingLot.name", target = "parkingLotName")
+    @Mapping(source = "parkingSpot.spotCode", target = "parkingSpotCode")
+    @Mapping(source = "vehicle.id", target = "vehicleId")
+    @Mapping(source = "vehicle.plateNumber", target = "vehiclePlate")
+
     ReservationResponse toResponseDto(Reservation reservation);
 
     List<ReservationResponse> toResponseDtoList(List<Reservation> reservations);
-
-    default String map(UUID id) {
-        return id != null ? id.toString() : null;
-    }
 }

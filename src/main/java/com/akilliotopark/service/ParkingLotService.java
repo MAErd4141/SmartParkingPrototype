@@ -1,46 +1,96 @@
 package com.akilliotopark.service;
 
 import com.akilliotopark.dto.ParkingLotResponse;
+import com.akilliotopark.dto.ParkingLotStatusResponse;
+import com.akilliotopark.dto.ParkingSpotResponse;
 import com.akilliotopark.entity.ParkingLot;
+import com.akilliotopark.entity.ParkingSpot;
+import com.akilliotopark.exception.NotFoundException;
+import com.akilliotopark.mapper.ParkingLotMapper;
+import com.akilliotopark.mapper.ParkingSpotMapper;
 import com.akilliotopark.repository.ParkingLotRepository;
+import com.akilliotopark.repository.ParkingSpotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ParkingLotService {
 
     private final ParkingLotRepository parkingLotRepository;
+    private final ParkingSpotRepository parkingSpotRepository;
+    private final ParkingLotMapper parkingLotMapper;
+    private final ParkingSpotMapper parkingSpotMapper;
 
+    /**
+     * Tüm otoparkları getir (genel liste)
+     */
     public List<ParkingLotResponse> getAllLots() {
-        return parkingLotRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+        List<ParkingLot> lots = parkingLotRepository.findAll();
+        return parkingLotMapper.toResponseDtoList(lots);
     }
 
+    /**
+     * Aynı işi yapan alternatif isimli method (istersen kullanma):
+     * Controller’da getAll() kullanıyorsan bozulmasın diye ekledim.
+     */
+    public List<ParkingLotResponse> getAll() {
+        return getAllLots();
+    }
+
+    /**
+     * İl + ilçe bazlı otopark listesi
+     */
     public List<ParkingLotResponse> getLotsByDistrictAndProvince(String district, String province) {
-        return parkingLotRepository.findByDistrictAndProvince(district, province).stream()
-                .map(this::toResponse)
-                .toList();
+        List<ParkingLot> lots =
+                parkingLotRepository.findByDistrictAndProvince(district, province);
+
+        return parkingLotMapper.toResponseDtoList(lots);
     }
 
-    private ParkingLotResponse toResponse(ParkingLot lot) {
-        ParkingLotResponse dto = new ParkingLotResponse();
-        dto.setId(lot.getId().toString());
-        dto.setName(lot.getName());
-        dto.setLatitude(lot.getLatitude());
-        dto.setLongitude(lot.getLongitude());
-        dto.setAddress(lot.getAddress());
+    /**
+     * Tek otopark detayı
+     */
+    public ParkingLotResponse getById(UUID id) {
+        ParkingLot lot = findLotOrThrow(id);
+        return parkingLotMapper.toResponseDto(lot);
+    }
 
-        int capacity = lot.getSpots() != null ? lot.getSpots().size() : 0;
-        int available = lot.getSpots() == null ? 0 :
-                (int) lot.getSpots().stream().filter(s -> !s.isOccupied()).count();
+    /**
+     * Bir otoparka ait tüm park yerleri
+     */
+    public List<ParkingSpotResponse> getSpotsByLot(UUID lotId) {
+        ParkingLot lot = findLotOrThrow(lotId);
+        List<ParkingSpot> spots = parkingSpotRepository.findByParkingLot(lot);
+        return parkingSpotMapper.toResponseDtoList(spots);
+    }
 
-        dto.setCapacity(capacity);
-        dto.setAvailable(available);
+    /**
+     * Doluluk / boşluk durumu (%)
+     */
+    public ParkingLotStatusResponse getStatus(UUID lotId) {
+        ParkingLot lot = findLotOrThrow(lotId);
 
-        return dto;
+        long total = parkingSpotRepository.countByParkingLot(lot);
+        long occupied = parkingSpotRepository.countByParkingLotAndOccupiedTrue(lot);
+        long free = total - occupied;
+        double occupancyRate = (total == 0) ? 0.0 : (occupied * 100.0 / total);
+
+        return ParkingLotStatusResponse.builder()
+                .parkingLotId(lot.getId())
+                .totalSpots(total)
+                .occupiedSpots(occupied)
+                .freeSpots(free)
+                .occupancyRate(occupancyRate)
+                .build();
+    }
+    private ParkingLot findLotOrThrow(UUID id) {
+        return parkingLotRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Otopark bulunamadı: " + id));
     }
 }
