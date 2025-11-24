@@ -15,6 +15,17 @@ spring:
         format_sql: true
         jdbc.time_zone: UTC
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://admin:password@localhost:27017/parking_logs?authSource=admin}
+      auto-index-creation: true
+
   jackson:
     serialization:
       write-dates-as-timestamps: false

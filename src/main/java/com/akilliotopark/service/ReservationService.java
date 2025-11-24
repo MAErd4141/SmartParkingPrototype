@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -30,6 +32,7 @@ public class ReservationService {
     private final ParkingSpotRepository parkingSpotRepository;
     private final VehicleRepository vehicleRepository;
     private final QrTokenService qrTokenService;
+    private final AsyncLogService logService;
 
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
@@ -73,7 +76,7 @@ public class ReservationService {
         Double hourlyRate = spot.getParkingLot().getHourlyRate();
 
         double hours = Math.ceil(durationMinutes / 60.0);
-        if (hours == 0) hours = 1.0; // En az 1 saat
+        if (hours == 0) hours = 1.0;
 
         double calculatedPrice = hours * hourlyRate;
 
@@ -83,7 +86,7 @@ public class ReservationService {
                 .vehicle(vehicle)
                 .reservedStart(request.getReservedStart())
                 .reservedEnd(request.getReservedEnd())
-                .totalPrice(calculatedPrice) // Fiyatı kaydet
+                .totalPrice(calculatedPrice)
                 .active(true)
                 .confirmed(false)
                 .build();
@@ -93,16 +96,27 @@ public class ReservationService {
         String qrToken = qrTokenService.generateToken(saved.getId(), vehicle.getPlateNumber());
         saved.setQrCode(qrToken);
 
+        Map<String, Object> logData = new HashMap<>();
+        logData.put("reservationId", saved.getId());
+        logData.put("userEmail", user.getEmail());
+        logData.put("plate", vehicle.getPlateNumber());
+        logData.put("spot", spot.getSpotCode());
+        logData.put("totalPrice", saved.getTotalPrice());
+
+        logService.saveLog(
+                "ReservationService",
+                "RESERVATION_CREATED",
+                "Yeni Rezervasyon Oluşturuldu",
+                logData // Entity yerine temiz Map gönderiyoruz
+        );
         return reservationRepository.save(saved);
     }
-
     @Transactional
     public void confirmReservation(UUID id) {
         Reservation r = reservationRepository.findById(id).orElseThrow();
         r.setConfirmed(true);
         reservationRepository.save(r);
     }
-
     @Transactional
     public void completeReservation(UUID id) {
         Reservation r = reservationRepository.findById(id)
@@ -117,20 +131,29 @@ public class ReservationService {
 
             if (overstayMinutes > 5) {
                 Double hourlyRate = r.getParkingSpot().getParkingLot().getHourlyRate();
-
                 double penaltyRate = hourlyRate * 1.5;
-
                 double penaltyHours = Math.ceil(overstayMinutes / 60.0);
                 double penaltyAmount = penaltyHours * penaltyRate;
 
                 r.setTotalPrice(r.getTotalPrice() + penaltyAmount);
-
                 System.out.println("CEZA KESİLDİ: " + penaltyAmount + " TL. Yeni Tutar: " + r.getTotalPrice());
             }
         }
 
         r.setActive(false);
         reservationRepository.save(r);
+
+        Map<String, Object> exitData = new HashMap<>();
+        exitData.put("reservationId", r.getId());
+        exitData.put("finalPrice", r.getTotalPrice());
+        exitData.put("endInfo", "Kullanıcı çıkış yaptı.");
+
+        logService.saveLog(
+                "ReservationService",
+                "EXIT_COMPLETED",
+                "Çıkış İşlemi ve Ödeme",
+                exitData
+        );
     }
 
     @Transactional
