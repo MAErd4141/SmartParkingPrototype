@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 173 58% 39%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 173 58% 39%;
+
+    --radius: 0.5rem;
+
+    /* Custom Dashboard Colors */
+    --sidebar: 222 47% 11%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-muted: 220 20% 20%;
+    --sidebar-accent: 173 58% 39%;
+
+    /* Stat Card Colors */
+    --stat-blue: 217 91% 60%;
+    --stat-green: 142 71% 45%;
+    --stat-orange: 25 95% 53%;
+    --stat-purple: 262 83% 58%;
+
+    /* Role Badge Colors */
+    --badge-supervisor: 0 84% 60%;
+    --badge-manager: 217 91% 60%;
+    --badge-basic: 220 9% 46%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 173 58% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 20% 20%;
+    --muted-foreground: 220 14% 65%;
+
+    --accent: 220 20% 20%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 25%;
+    --input: 220 20% 25%;
+    --ring: 173 58% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl bg-card p-6 shadow-sm border border-border transition-all duration-200 hover:shadow-md;
+  }
+
+  .stat-card-blue::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-[hsl(var(--stat-blue))];
+  }
+
+  .stat-card-green::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-[hsl(var(--stat-green))];
+  }
+
+  .stat-card-orange::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-[hsl(var(--stat-orange))];
+  }
+
+  .stat-card-purple::before {
+    content: '';
+    @apply absolute left-0 top-0 h-full w-1 bg-[hsl(var(--stat-purple))];
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-all duration-200 hover:bg-sidebar-muted hover:text-sidebar-foreground;
+  }
+
+  .sidebar-link-active {
+    @apply bg-sidebar-muted text-sidebar-foreground;
+  }
+}
+
+/* Leaflet Map Styles */
+.leaflet-container {
+  @apply h-full w-full rounded-lg;
+  z-index: 0;
+}
+
+.leaflet-control-zoom {
+  @apply border-none shadow-lg;
+}
+
+.leaflet-control-zoom a {
+  @apply bg-card text-foreground border-border;
+}

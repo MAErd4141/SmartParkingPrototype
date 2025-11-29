@@ -6,9 +6,9 @@ services:
     container_name: parking-postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASS}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-akilli_otopark}
     ports:
       - "5432:5432"
     volumes:
@@ -24,8 +24,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS}
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-guest}
     networks:
       - parking-network
 
@@ -36,10 +36,54 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-password}
     volumes:
       - mongo_data:/data/db
+    networks:
+      - parking-network
+
+  redis:
+    image: redis:alpine
+    container_name: parking-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - parking-network
+
+  backend:
+    build: ./backend
+    container_name: parking-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akilli_otopark
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASS:-password}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-password}@mongo:27017/parking_logs?authSource=admin
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      - postgres
+      - rabbitmq
+      - mongo
+      - redis
+    networks:
+      - parking-network
+
+  frontend:
+    build: ./frontend
+    container_name: parking-frontend
+    restart: always
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+    depends_on:
+      - backend
     networks:
       - parking-network
 

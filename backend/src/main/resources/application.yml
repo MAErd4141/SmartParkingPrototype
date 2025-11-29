@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/akilli_otopark}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:1234}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.time_zone: UTC
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://admin:password@localhost:27017/parking_logs?authSource=admin}
+      auto-index-creation: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+
+server:
+  port: 8080
+
+app:
+  qr:
+    secret: ${APP_QR_SECRET:super-secret-key-buraya-bir-sey-yaz}
+    ttl-minutes: ${APP_QR_TTL_MINUTES:30}
+
+  jwt:
+    secret: ${APP_JWT_SECRET:super-gizli-jwt-key-buraya-bir-sey-yaz}
+    expiration-minutes: 60
+
+    data:
+      redis:
+        host: localhost
+        port: 6379
