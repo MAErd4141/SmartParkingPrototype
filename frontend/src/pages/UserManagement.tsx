@@ -27,10 +27,10 @@ import { Users, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
-const roleBadgeStyles: Record<User['role'], string> = {
-  SUPERVISOR: 'bg-badge-supervisor text-white hover:bg-badge-supervisor/90',
-  MANAGER: 'bg-badge-manager text-white hover:bg-badge-manager/90',
-  BASIC: 'bg-badge-basic text-white hover:bg-badge-basic/90',
+const roleBadgeStyles: Record<string, string> = {
+  SUPERVISOR: 'bg-blue-500 hover:bg-blue-600 text-white',
+  ADMIN: 'bg-purple-500 hover:bg-purple-600 text-white',
+  BASIC: 'bg-gray-500 hover:bg-gray-600 text-white',
 };
 
 export default function UserManagement() {
@@ -94,9 +94,9 @@ export default function UserManagement() {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
                     <TableCell>
-                      <Badge className={cn('font-medium', roleBadgeStyles[user.role])}>
-                        {user.role}
-                      </Badge>
+                      <Badge className={cn('font-medium', roleBadgeStyles[user.role] || 'bg-gray-500')}>
+                           {user.role}
+                         </Badge>
                     </TableCell>
                     <TableCell>
                       <AlertDialog>

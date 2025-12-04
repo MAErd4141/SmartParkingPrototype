@@ -10,6 +10,8 @@ import com.akilliotopark.repository.ReservationRepository;
 import com.akilliotopark.repository.UserRepository;
 import com.akilliotopark.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
@@ -36,6 +39,7 @@ public class ReservationService {
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
+
     @Transactional
     public Reservation createReservation(String userEmail, ReservationRequest request) {
 
@@ -50,6 +54,7 @@ public class ReservationService {
         if (durationMinutes < 15) {
             throw new BusinessValidationException("Minimum 15 dakika seçilmelidir.");
         }
+
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + userEmail));
 
@@ -62,6 +67,7 @@ public class ReservationService {
         if (!vehicle.getOwner().getId().equals(user.getId())) {
             throw new ConflictException("Bu araç size ait değil!");
         }
+
         List<Reservation> overlaps = reservationRepository.findOverlappingReservations(
                 spot.getId(), request.getReservedStart(), request.getReservedEnd()
         );
@@ -91,7 +97,7 @@ public class ReservationService {
                 .vehicle(vehicle)
                 .reservedStart(request.getReservedStart())
                 .reservedEnd(request.getReservedEnd())
-                .totalPrice(calculatedPrice) // BigDecimal
+                .totalPrice(calculatedPrice)
                 .currentChargeLevel(vehicle.getType() == VehicleType.EV ? 20 : null)
                 .active(true)
                 .confirmed(false)
@@ -107,6 +113,7 @@ public class ReservationService {
         logData.put("plate", vehicle.getPlateNumber());
         logData.put("totalPrice", saved.getTotalPrice());
         logData.put("isSubscriber", isSubscriber);
+
         logService.saveLog(
                 "ReservationService",
                 "RESERVATION_CREATED",
@@ -117,7 +124,6 @@ public class ReservationService {
     }
     private BigDecimal calculateDynamicPrice(Tariff tariff, long durationMinutes) {
         if (tariff == null || tariff.getRules() == null || tariff.getRules().isEmpty()) {
-
             double hours = Math.ceil(durationMinutes / 60.0);
             return BigDecimal.valueOf(50.0 * hours);
         }
@@ -144,7 +150,9 @@ public class ReservationService {
     public void completeReservation(UUID id) {
         Reservation r = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Rezervasyon bulunamadı: " + id));
+
         if (!r.isActive()) return;
+
         if (r.getTotalPrice().compareTo(BigDecimal.ZERO) > 0) {
             LocalDateTime now = LocalDateTime.now();
             if (now.isAfter(r.getReservedEnd())) {
@@ -181,5 +189,23 @@ public class ReservationService {
     }
     public Reservation getReservationById(UUID id) {
         return reservationRepository.findById(id).orElseThrow();
+    }
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void autoCompleteExpiredReservations() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Reservation> expiredReservations = reservationRepository.findAll().stream()
+                .filter(r -> r.isActive() && r.getReservedEnd().isBefore(now))
+                .toList();
+
+        for (Reservation r : expiredReservations) {
+            r.setActive(false);
+            logService.saveLog("System", "AUTO_COMPLETE", "Süresi dolan rezervasyon kapatıldı: " + r.getId(), null);
+        }
+
+        if (!expiredReservations.isEmpty()) {
+            reservationRepository.saveAll(expiredReservations);
+            log.info("{} adet süresi dolmuş rezervasyon kapatıldı.", expiredReservations.size());
+        }
     }
 }

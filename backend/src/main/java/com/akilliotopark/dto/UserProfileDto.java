@@ -1,4 +1,3 @@
-// UserProfileDto.java
 package com.akilliotopark.dto;
 
 import lombok.Builder;

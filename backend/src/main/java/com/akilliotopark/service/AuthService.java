@@ -9,10 +9,11 @@ import com.akilliotopark.exception.ConflictException;
 import com.akilliotopark.repository.UserRepository;
 import com.akilliotopark.security.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -21,10 +22,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
-
+    private final RedisTemplate<String, Object> redisTemplate;
     public AuthResponse register(AuthRegisterRequest request) {
-
         userRepository.findByEmail(request.getEmail()).ifPresent(u -> {
             throw new ConflictException("Bu e-posta zaten kayıtlı: " + request.getEmail());
         });
@@ -44,17 +43,30 @@ public class AuthService {
         String token = jwtService.generateToken(user.getEmail());
         return new AuthResponse(token);
     }
-
     public AuthResponse login(AuthLoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() ->
+                        new org.springframework.security.authentication.BadCredentialsException("Kullanıcı veya şifre hatalı"));
+        boolean matches = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        System.out.println("DEBUG LOGIN >> email=" + request.getEmail()
+                + " raw=" + request.getPassword()
+                + " hash=" + user.getPassword()
+                + " length=" + user.getPassword().length()
+                + " matches=" + matches);
 
-        String token = jwtService.generateToken(request.getEmail());
+        if (!matches) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Kullanıcı veya şifre hatalı");
+        }
+        String token = jwtService.generateToken(user.getEmail());
         return new AuthResponse(token);
+    }
+    public void logout(String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        if (token != null) {
+            redisTemplate.opsForValue().set(token, "logout", Duration.ofSeconds(3600));
+        }
     }
 }

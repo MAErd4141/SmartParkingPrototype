@@ -30,7 +30,8 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        return ResponseEntity.ok("Çıkış işlemi başarılı.");
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String token) {
+        authService.logout(token);
+        return ResponseEntity.ok("Başarıyla çıkış yapıldı.");
     }
 }

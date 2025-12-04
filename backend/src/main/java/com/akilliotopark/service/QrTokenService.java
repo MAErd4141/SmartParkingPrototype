@@ -25,6 +25,7 @@ public class QrTokenService {
     private Key getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
+
     public String generateToken(UUID reservationId, String plateNumber) {
         Instant now = Instant.now();
         long ttlSeconds = Math.multiplyExact(ttlMinutes, 60L);
@@ -38,10 +39,12 @@ public class QrTokenService {
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
     public boolean validateToken(String token, String plateNumber) {
         try {
-            var claims = Jwts.parser()
+            var claims = Jwts.parserBuilder()
                     .setSigningKey(getKey())
+                    .build()
                     .parseClaimsJws(token)
                     .getBody();
 
@@ -53,7 +56,7 @@ public class QrTokenService {
                     && plateFromToken.equalsIgnoreCase(plateNumber)
                     && exp.after(new Date());
 
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }

@@ -2,6 +2,7 @@ package com.akilliotopark;
 
 import com.akilliotopark.document.SystemLog;
 import com.akilliotopark.repository.mongo.LogRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @EnableJpaAuditing
 @EnableScheduling
 @EnableAsync
+@Slf4j
 public class AkilliOtoparkBackendApplication {
 
     public static void main(String[] args) {
@@ -24,8 +26,8 @@ public class AkilliOtoparkBackendApplication {
     @Bean
     CommandLineRunner testMongoConnection(LogRepository logRepository) {
         return args -> {
-            System.out.println("========================================");
-            System.out.println("🧪 MONGO DB TESTİ BAŞLIYOR...");
+            log.info("========================================");
+            log.info("🧪 MONGO DB TESTİ BAŞLIYOR...");
 
             try {
                 SystemLog testLog = SystemLog.builder()
@@ -37,15 +39,12 @@ public class AkilliOtoparkBackendApplication {
 
                 logRepository.save(testLog);
 
-                System.out.println("✅ MONGO DB TESTİ BAŞARILI! Kayıt atıldı.");
-                System.out.println("👉 Lütfen terminalden 'db.system_logs.find()' komutunu tekrar dene.");
+                log.info("✅ MONGO DB TESTİ BAŞARILI! Kayıt atıldı.");
 
             } catch (Exception e) {
-                System.out.println("❌ MONGO DB TESTİ BAŞARISIZ!");
-                System.out.println("HATA DETAYI: " + e.getMessage());
-                e.printStackTrace();
+                log.error("❌ MONGO DB TESTİ BAŞARISIZ!", e);
             }
-            System.out.println("========================================");
+            log.info("========================================");
         };
     }
 }

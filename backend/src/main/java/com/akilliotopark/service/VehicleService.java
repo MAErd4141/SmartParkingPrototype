@@ -24,15 +24,16 @@ public class VehicleService {
     private final UserRepository userRepository;
     private final VehicleMapper vehicleMapper;
 
+    private static final String VEHICLE_NOT_FOUND_MSG = "Araç bulunamadı";
+
     public List<VehicleResponse> getAllVehicles() {
         return vehicleMapper.toResponseDtoList(vehicleRepository.findAll());
     }
-
     public VehicleResponse getVehicleById(UUID id) {
-        Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(() -> new NotFoundException("Araç bulunamadı"));
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(VEHICLE_NOT_FOUND_MSG));
         return vehicleMapper.toResponseDto(vehicle);
     }
-
     @Transactional
     public VehicleResponse createVehicleForUser(String ownerEmail, VehicleRequest request) {
         if (vehicleRepository.findByPlateNumber(request.getPlateNumber()) != null) {
@@ -46,7 +47,6 @@ public class VehicleService {
         vehicle.setPlateNumber(request.getPlateNumber());
         vehicle.setOwner(owner);
 
-
         try {
             if (request.getType() != null && !request.getType().isEmpty()) {
                 vehicle.setType(VehicleType.valueOf(request.getType().toUpperCase()));
@@ -59,20 +59,19 @@ public class VehicleService {
 
         return vehicleMapper.toResponseDto(vehicleRepository.save(vehicle));
     }
-
     @Transactional
     public void deleteVehicle(UUID id) {
-        Vehicle v = vehicleRepository.findById(id).orElseThrow(() -> new NotFoundException("Araç bulunamadı"));
+        Vehicle v = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(VEHICLE_NOT_FOUND_MSG));
         vehicleRepository.delete(v);
     }
-
     @Transactional
     public VehicleResponse updateVehicle(UUID id, VehicleRequest request) {
-        Vehicle v = vehicleRepository.findById(id).orElseThrow(() -> new NotFoundException("Araç bulunamadı"));
+        Vehicle v = vehicleRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(VEHICLE_NOT_FOUND_MSG));
         v.setPlateNumber(request.getPlateNumber());
         return vehicleMapper.toResponseDto(vehicleRepository.save(v));
     }
-
     public List<VehicleResponse> getVehiclesByEmail(String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
         return vehicleMapper.toResponseDtoList(vehicleRepository.findByOwner(user));

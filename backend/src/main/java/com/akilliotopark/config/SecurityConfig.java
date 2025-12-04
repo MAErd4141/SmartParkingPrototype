@@ -34,39 +34,34 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        // 1. ÖNCE AÇIK OLMASI GEREKENLERE İZİN VER
                         .requestMatchers(
-                                "/api/debug/**",         // 👈 DEBUG KAPISI (En üstte olsun)
-                                "/api/auth/**",          // Login/Register
-                                "/v3/api-docs/**",       // Swagger
+                                "/api/debug/**",
+                                "/api/auth/**",
+                                "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/api/parking-lots/**",  // Otopark Listesi
-                                "/admin.html",           // Admin Sayfası
-                                "/static/**",            // Statik dosyalar
+                                "/api/parking-lots/**",
+                                "/admin.html",
+                                "/static/**",
                                 "/*.html",
                                 "/*.css",
                                 "/*.js",
                                 "/favicon.ico"
                         ).permitAll()
-
-                        // 2. GERİ KALAN HER ŞEY KİLİTLİ
                         .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://localhost:3000"));
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -75,7 +70,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

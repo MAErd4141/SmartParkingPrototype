@@ -2,7 +2,7 @@ package com.akilliotopark.controller;
 
 import com.akilliotopark.dto.DashboardStatsResponse;
 import com.akilliotopark.repository.ParkingLotRepository;
-import com.akilliotopark.repository.ReservationRepository; // Repository eklendi
+import com.akilliotopark.repository.ReservationRepository;
 import com.akilliotopark.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

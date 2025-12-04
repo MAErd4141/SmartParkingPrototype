@@ -16,7 +16,6 @@ public class DebugController {
 
     private final UserRepository userRepository;
 
-    // Bu endpoint veritabanındaki TÜM kullanıcıları ham haliyle gösterir
     @GetMapping("/users")
     public List<User> seeAllUsers() {
         return userRepository.findAll();

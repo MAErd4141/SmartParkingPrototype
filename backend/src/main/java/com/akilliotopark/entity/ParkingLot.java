@@ -16,7 +16,7 @@ import java.util.UUID;
 public class ParkingLot extends BaseEntity {
 
     @Id
-    @GeneratedValue // 👈 EKSİK OLAN BUYDU, EKLENDİ!
+    @GeneratedValue
     @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 

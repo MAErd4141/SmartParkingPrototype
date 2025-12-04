@@ -1,9 +1,9 @@
 package com.akilliotopark.controller;
 
 import com.akilliotopark.dto.ParkingSpotRequest;
-import com.akilliotopark.dto.ParkingSpotResponse; // DTO import edildi
+import com.akilliotopark.dto.ParkingSpotResponse;
 import com.akilliotopark.entity.ParkingSpot;
-import com.akilliotopark.mapper.ParkingSpotMapper; // Mapper import edildi
+import com.akilliotopark.mapper.ParkingSpotMapper;
 import com.akilliotopark.service.ParkingSpotService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -24,32 +24,47 @@ public class UserService {
     private final ReservationRepository reservationRepository;
     private final VehicleRepository vehicleRepository;
 
-    public List<UserResponse> getAllUsers() { return userMapper.toResponseDtoList(userRepository.findAll()); }
-    public UserResponse getUserByEmail(String email) { return userMapper.toResponseDto(userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("Kullanıcı yok"))); }
-    public UserResponse getUserById(UUID id) { return userMapper.toResponseDto(userRepository.findById(id).orElseThrow()); }
+    public List<UserResponse> getAllUsers() {
+        return userMapper.toResponseDtoList(userRepository.findAll());
+    }
 
+    public UserResponse getUserByEmail(String email) {
+        return userMapper.toResponseDto(findUserByEmailOrThrow(email));
+    }
+
+    public UserResponse getUserById(UUID id) {
+        return userMapper.toResponseDto(findUserByIdOrThrow(id));
+    }
     @Transactional
     public void deleteUserByEmail(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("Kullanıcı yok"));
-
-        reservationRepository.deleteAll(reservationRepository.findByUserId(user.getId()));
-        vehicleRepository.deleteAll(vehicleRepository.findByOwner(user));
-
-        userRepository.delete(user);
+        User user = findUserByEmailOrThrow(email);
+        performUserDeletion(user);
     }
 
     @Transactional
     public void deleteUserById(UUID id) {
-        User user = userRepository.findById(id).orElseThrow();
-        deleteUserByEmail(user.getEmail());
+        User user = findUserByIdOrThrow(id);
+        performUserDeletion(user);
     }
-
+    private void performUserDeletion(User user) {
+        reservationRepository.deleteAll(reservationRepository.findByUserId(user.getId()));
+        vehicleRepository.deleteAll(vehicleRepository.findByOwner(user));
+        userRepository.delete(user);
+    }
     @Transactional
     public UserResponse updateUser(UUID id, UserRequest request) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = findUserByIdOrThrow(id);
         user.setFullName(request.getFullName());
         user.setDistrict(request.getDistrict());
         user.setProvince(request.getProvince());
         return userMapper.toResponseDto(userRepository.save(user));
+    }
+    private User findUserByEmailOrThrow(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + email));
+    }
+    private User findUserByIdOrThrow(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Kullanıcı bulunamadı: " + id));
     }
 }

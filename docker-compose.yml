@@ -6,13 +6,24 @@ services:
     container_name: parking-postgres
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASS:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-akilli_otopark}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: akilli_otopark
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - parking-network
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: parking-sonarqube
+    restart: always
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
     networks:
       - parking-network
 
@@ -24,8 +35,8 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBIT_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     networks:
       - parking-network
 
@@ -36,8 +47,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASS:-password}
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
       - mongo_data:/data/db
     networks:
@@ -56,14 +67,13 @@ services:
     build: ./backend
     container_name: parking-backend
     restart: always
-    ports:
-      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/akilli_otopark
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASS:-password}
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-admin}:${MONGO_PASS:-password}@mongo:27017/parking_logs?authSource=admin
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongo:27017/parking_logs?authSource=admin
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
     depends_on:
@@ -71,6 +81,8 @@ services:
       - rabbitmq
       - mongo
       - redis
+    ports:
+      - "8080:8080"
     networks:
       - parking-network
 

@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Random;
 
@@ -20,7 +21,7 @@ public class SimulationService {
 
     private final ParkingSpotRepository parkingSpotRepository;
     private final ReservationRepository reservationRepository;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     @Scheduled(fixedRate = 15000)
     @Transactional

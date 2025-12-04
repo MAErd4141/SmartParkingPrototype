@@ -172,6 +172,35 @@ export function AddParkingModal({ open, onOpenChange }: AddParkingModalProps) {
               )}
             />
 
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="latitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Enlem (Latitude)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.000001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="longitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Boylam (Longitude)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.000001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 İptal

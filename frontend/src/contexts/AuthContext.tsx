@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { authApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -13,44 +12,35 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient(); // Cache yönetimi için
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return !!localStorage.getItem('authToken');
+  });
 
-  useEffect(() => {
-    // Sayfa yenilendiğinde Token kontrolü
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
-  }, []);
+  const queryClient = useQueryClient();
 
   const login = async (email: string, password: string) => {
     try {
       const response = await authApi.login(email, password);
-      localStorage.setItem('authToken', response.token);
+      const token = response.token || response.accessToken;
+
+      localStorage.setItem('authToken', token);
       setIsAuthenticated(true);
       toast.success("Giriş başarılı!");
     } catch (error) {
       console.error("Login hatası:", error);
-      throw error; // Hatayı UI'a fırlat ki orada yakalayıp gösterelim
+      throw error;
     }
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     setIsAuthenticated(false);
-
-    // ENTERPRISE DOKUNUŞU:
-    // Çıkış yapınca hafızadaki tüm hassas verileri (Cache) temizle.
-    queryClient.clear();
-
+    queryClient.clear(); // Cache temizle
     toast.info("Çıkış yapıldı.");
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

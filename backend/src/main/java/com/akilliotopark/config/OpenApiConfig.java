@@ -9,11 +9,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-
-    /**
-     * 1. GRUP: MOBİL UYGULAMA (Normal Kullanıcı)
-     * Sadece 'BASIC' rolündeki bir kullanıcının erişebileceği ve ihtiyaç duyduğu uçlar.
-     */
     @Bean
     public GroupedOpenApi mobileApi() {
         return GroupedOpenApi.builder()
@@ -23,59 +18,34 @@ public class OpenApiConfig {
                         "/api/auth/login",
                         "/api/auth/register",
                         "/api/auth/logout",
-
-                        // App & Profil (Kullanıcının Görmesi Gereken Yer Burası)
                         "/api/app/init",
-                        "/api/users/me",  // <--- ÖNEMLİ: Sadece 'me' endpointi burada
-
-                        // Araçlar (Kendi araçları)
-                        "/api/vehicles",      // Ekleme
-                        "/api/vehicles/my",   // Listeleme
-                        "/api/vehicles/{id}", // Silme/Güncelleme
-
-                        // Otoparklar (Herkes görebilir)
+                        "/api/users/me",
+                        "/api/vehicles",
+                        "/api/vehicles/my",
+                        "/api/vehicles/{id}",
                         "/api/parking-lots",
                         "/api/parking-lots/{id}",
                         "/api/parking-lots/{id}/spots",
-
-                        // Rezervasyon (Kendi işlemleri)
-                        "/api/reservations",          // Oluştur
-                        "/api/reservations/my",       // Listele
-                        "/api/reservations/{id}/cancel", // İptal Et
-
-                        // Giriş Simülasyonu
+                        "/api/reservations",
+                        "/api/reservations/my",
+                        "/api/reservations/{id}/cancel",
                         "/api/entry/verify"
                 )
                 .build();
     }
-
-    /**
-     * 2. GRUP: ADMİN PANELİ
-     * Yöneticinin ihtiyaç duyduğu Dashboard ve Yönetim uçları.
-     */
     @Bean
     public GroupedOpenApi adminApi() {
         return GroupedOpenApi.builder()
                 .group("2-admin-panel-api")
                 .pathsToMatch(
-                        // Dashboard
                         "/api/admin/**",
-
-                        // Kullanıcı Yönetimi (Hepsini gör, sil, düzenle)
                         "/api/users/**",
-
-                        // Otopark Yönetimi (Ekleme dahil)
                         "/api/parking-lots/**",
-
-                        // Rezervasyon Yönetimi (Hepsini gör, müdahale et)
                         "/api/reservations/**",
-
-                        // Araç Yönetimi (Tüm araçları gör)
                         "/api/vehicles/**"
                 )
                 .build();
     }
-
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
