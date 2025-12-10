@@ -6,11 +6,14 @@ import com.akilliotopark.mapper.ReservationMapper;
 import com.akilliotopark.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,5 +58,13 @@ public class ReservationController {
     public ResponseEntity<Void> complete(@PathVariable UUID id) {
         service.completeReservation(id);
         return ResponseEntity.ok().build();
+    }
+    @GetMapping("/unavailable")
+    public ResponseEntity<List<ReservationResponse>> getUnavailableSpots(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
+    )
+    {
+        return ResponseEntity.ok(mapper.toResponseDtoList(service.findConflictingReservations(startTime, endTime)));
     }
 }

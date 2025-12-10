@@ -39,7 +39,12 @@ public class ReservationService {
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
     }
-
+    public List<Reservation> findConflictingReservations(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime.isAfter(endTime)) {
+            throw new BusinessValidationException("Bitiş saati, başlangıç saatinden önce olamaz.");
+        }
+        return reservationRepository.findConflictingReservations(startTime, endTime);
+    }
     @Transactional
     public Reservation createReservation(String userEmail, ReservationRequest request) {
 
