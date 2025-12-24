@@ -12,7 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -59,12 +58,12 @@ public class ReservationController {
         service.completeReservation(id);
         return ResponseEntity.ok().build();
     }
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/unavailable")
     public ResponseEntity<List<ReservationResponse>> getUnavailableSpots(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
-    )
-    {
+    ) {
         return ResponseEntity.ok(mapper.toResponseDtoList(service.findConflictingReservations(startTime, endTime)));
     }
 }
