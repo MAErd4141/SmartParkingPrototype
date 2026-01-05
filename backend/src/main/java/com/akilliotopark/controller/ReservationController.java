@@ -58,7 +58,7 @@ public class ReservationController {
         service.completeReservation(id);
         return ResponseEntity.ok().build();
     }
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','BASIC')")
     @GetMapping("/unavailable")
     public ResponseEntity<List<ReservationResponse>> getUnavailableSpots(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
