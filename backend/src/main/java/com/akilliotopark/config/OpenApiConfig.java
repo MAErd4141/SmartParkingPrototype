@@ -18,18 +18,33 @@ public class OpenApiConfig {
                         "/api/auth/login",
                         "/api/auth/register",
                         "/api/auth/logout",
+
+                        // App Init & Profile
                         "/api/app/init",
                         "/api/users/me",
+
+                        // Vehicles
                         "/api/vehicles",
                         "/api/vehicles/my",
                         "/api/vehicles/{id}",
+
+                        // Parking lots
                         "/api/parking-lots",
                         "/api/parking-lots/{id}",
                         "/api/parking-lots/{id}/spots",
+
+                        // Reservations
                         "/api/reservations",
                         "/api/reservations/my",
+                        "/api/reservations/unavailable",
                         "/api/reservations/{id}/cancel",
-                        "/api/entry/verify"
+
+                        // Entry
+                        "/api/entry/verify",
+
+                        // IoT ingest (new)
+                        "/api/iot-ingest/camera",
+                        "/api/iot-ingest/sensor"
                 )
                 .build();
     }

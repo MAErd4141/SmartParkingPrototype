@@ -46,11 +46,11 @@ public class SecurityConfig {
                                 "/*.html",
                                 "/*.css",
                                 "/*.js",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/api/iot-ingest/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )

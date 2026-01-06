@@ -9,4 +9,6 @@ public class OcrResultDto implements Serializable {
     private String plateText;
     private double confidence;
     private String timestamp;
+    private String qr;
+    private String deviceId;
 }

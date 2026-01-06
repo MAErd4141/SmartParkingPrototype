@@ -61,6 +61,7 @@ public class ReservationController {
     @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','BASIC')")
     @GetMapping("/unavailable")
     public ResponseEntity<List<ReservationResponse>> getUnavailableSpots(
+            @RequestParam UUID parkingLotId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime
     ) {
