@@ -18,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SensorService {
 
     // ✅ LOT-001 sabit (şimdilik). Sonra deviceId -> lotId map yaparız.
-    private static final UUID LOT_001_ID = UUID.fromString("8be945c1-be8c-4385-9380-951ddef3dbbf");
+    private static final UUID LOT_001_ID =
+            UUID.fromString("8be945c1-be8c-4385-9380-951ddef3dbbf");
 
     private final AsyncLogService asyncLogService;
     private final ParkingSpotRepository parkingSpotRepository;
@@ -39,7 +40,7 @@ public class SensorService {
         }
         slotStateCache.put(req.slotId(), occupied);
 
-        String spotCode = toSpotCode(req.slotId()); // 1 -> A-1
+        String spotCode = toSpotCode(req.slotId()); // 0 -> A-01, 1 -> A-02 ...
 
         Optional<ParkingSpot> spotOpt =
                 parkingSpotRepository.findByParkingLotIdAndSpotCode(LOT_001_ID, spotCode);
@@ -49,7 +50,11 @@ public class SensorService {
                     "Sensor-Service",
                     "SPOT_NOT_FOUND",
                     "Spot bulunamadı | slotId=" + req.slotId() + " | spotCode=" + spotCode,
-                    Map.of("slotId", req.slotId(), "spotCode", spotCode, "parkingLotId", LOT_001_ID.toString())
+                    Map.of(
+                            "slotId", req.slotId(),
+                            "spotCode", spotCode,
+                            "parkingLotId", LOT_001_ID.toString()
+                    )
             );
             return;
         }
@@ -80,11 +85,21 @@ public class SensorService {
         );
     }
 
+    /**
+     * DB spot_code formatı: A-01..A-10
+     * Sensörden slotId 0-index (0..9) veya 1-index (1..10) gelebilir.
+     */
     private String toSpotCode(int slotId) {
-        if (slotId < 1 || slotId > 10) {
-            // şimdilik 10 spot test ediyoruz; istersen genişletiriz
-            return "A-" + slotId;
+        int spotNo;
+
+        // 1..10 gelirse zaten spot numarasıdır
+        if (slotId >= 1 && slotId <= 10) {
+            spotNo = slotId;
+        } else {
+            // 0..9 gelirse 1..10'a çevir
+            spotNo = slotId + 1;
         }
-        return "A-" + slotId;
+
+        return String.format("A-%02d", spotNo);
     }
 }
