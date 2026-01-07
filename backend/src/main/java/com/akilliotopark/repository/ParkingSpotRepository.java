@@ -5,6 +5,7 @@ import com.akilliotopark.entity.ParkingSpot;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID> {
@@ -18,6 +19,8 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, UUID> 
     long countByParkingLotAndOccupiedTrue(ParkingLot parkingLot);
 
     List<ParkingSpot> findByParkingLotId(UUID parkingLotId);
+
+    Optional<ParkingSpot> findByParkingLotIdAndSpotCode(UUID parkingLotId, String spotCode);
 
     List<ParkingSpot> findByOccupiedFalse();
 }

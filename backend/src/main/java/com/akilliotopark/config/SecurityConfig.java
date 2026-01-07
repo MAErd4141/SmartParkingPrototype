@@ -47,7 +47,9 @@ public class SecurityConfig {
                                 "/*.css",
                                 "/*.js",
                                 "/favicon.ico",
-                                "/api/iot-ingest/**"
+                                "/api/iot-ingest/**",
+                                "/api/sensor/reading/**",
+                                "api/sensor/ping/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
